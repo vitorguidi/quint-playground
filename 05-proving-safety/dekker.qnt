@@ -132,4 +132,7 @@ module Dekker {
         ) 
     }
     
+    temporal no_race_condition: bool = always(mutual_exclusion)
+    temporal eventually_finishes: bool = eventually(finishes_execution)
+
 }
