@@ -25,6 +25,7 @@ module Dekker {
 
     var wants_to_enter: ProcessId -> bool
     var turn: int
+    var iteration: int
     var process_state: ProcessId -> ProcessState
     
     val processes: Set[int] = 0.to(1)
@@ -37,7 +38,8 @@ module Dekker {
         all {
             turn' = proc,
             wants_to_enter' = initial_wants_to_enter,
-            process_state' = initial_state
+            process_state' = initial_state,
+            iteration' = 0,
         }
     }
 
@@ -47,13 +49,15 @@ module Dekker {
         current_process_state == "start",
         turn' = turn,
         process_state' = process_state.set(process_id, "s1"),
-        wants_to_enter' = wants_to_enter.set(process_id, true),    
+        wants_to_enter' = wants_to_enter.set(process_id, true),  
+        iteration'=iteration+1,  
     }
 
     action step_s1(process_id: int, current_process_state: ProcessState): bool = all {
         current_process_state == "s1",
         turn' = turn,
         wants_to_enter'= wants_to_enter,
+        iteration'=iteration+1,  
         if (wants_to_enter.get(other_process(process_id)) == true) {
             process_state'= process_state.set(process_id, "s2")
         } else {
@@ -65,6 +69,7 @@ module Dekker {
         current_process_state == "s2",
         turn' = 0,
         wants_to_enter'= wants_to_enter,
+        iteration'=iteration+1,  
         if (turn != process_id) {
             process_state'= process_state.set(process_id, "s3")
         } else {
@@ -75,6 +80,7 @@ module Dekker {
     action step_s3(process_id: int, current_process_state: ProcessState): bool = all {
         current_process_state == "s3",
         turn' = 0,
+        iteration'=iteration+1,  
         process_state'=  process_state.set(process_id, "s4"),
         wants_to_enter'= wants_to_enter.set(process_id, false)
     }
@@ -82,6 +88,7 @@ module Dekker {
     action step_s4(process_id: int, current_process_state: ProcessState): bool = all {
         current_process_state == "s4",
         turn' = turn,
+        iteration'=iteration+1,  
         any {
             all {
                 turn != process_id,
@@ -100,7 +107,8 @@ module Dekker {
         current_process_state == "cs",
         turn' = other_process(process_id),
         wants_to_enter' = wants_to_enter.set(process_id, false),
-        process_state'=process_state.set(process_id, "done")
+        process_state'=process_state.set(process_id, "done"),
+        iteration'=iteration+1,  
     }
 
     action step: bool = {
