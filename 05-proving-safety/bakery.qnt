@@ -37,7 +37,6 @@ module bakery {
     var choosing: ProcessId -> int
     var number: ProcessId -> int
     var process_state: ProcessId -> ProcessState
-    var iteration: int
 
     pure def max(x: int, y: int): int = if (x > y) x else y
 
@@ -51,7 +50,6 @@ module bakery {
         choosing' = processes.mapBy(x => 1),
         number' = processes.mapBy(x => 0),
         process_state' = processes.mapBy(x => "L1"),
-        iteration' = 0,
     }
 
     action step_l1(process_id: int) : bool =  {
@@ -60,7 +58,6 @@ module bakery {
 
         all {
             process_state.get(process_id) == "L1",
-            iteration' = iteration+1,
             if (j.get(process_id) > num_processes) all {
                 number'= number.set(process_id, 1 + current_number),
                 choosing'=choosing.set(process_id, 0),
@@ -87,25 +84,18 @@ module bakery {
 
         all {
             process_state.get(process_id) == "L2",
-            iteration' = iteration + 1,
             if (current_j > num_processes) all {
                 process_state'=process_state.set(process_id, "CS"),
                 number'=number,
                 choosing'=choosing,
                 j'=j,
 
-            } else if (choosing.get(current_j) != 0) all {
-                process_state'=process_state, // stay at L2 frozen
-                j'=j,
-                number'=number,
-                choosing'=choosing,
-
             } else all {
+                not((choosing.get(current_j) != 0)),
                 process_state'=process_state.set(process_id, "L3"), //go to l3 on same iteration
                 j'=j,
                 number'=number,
                 choosing'=choosing,
-
             }
         }
     }
@@ -117,13 +107,8 @@ module bakery {
 
         all {
             process_state.get(process_id) == "L3",
-            iteration' = iteration + 1,
-            if (and(number.get(current_j) != 0, smaller(current_j, process_id))) all {
-                j'=j,
-                number'=number,
-                choosing'=choosing,
-                process_state'=process_state,   //busy wait on l3
-            } else all {
+            not(and(number.get(current_j) != 0, smaller(current_j, process_id))),
+            all {
                 j'=j.set(process_id, current_j+1),
                 number'=number,
                 process_state'=process_state.set(process_id, "L2"),
@@ -139,7 +124,6 @@ module bakery {
         choosing'=choosing,
         j'=j,
         process_state'=process_state.set(process_id, "DONE"),
-        iteration' = iteration+1,
     }
 
     action step = all {
