@@ -29,7 +29,7 @@ module bakery {
     type ProcessState = str
     type ProcessId = int
 
-    val num_processes: int = 3
+    val num_processes: int = 2
     val possible_states: Set[ProcessState] = Set("L1", "L2", "L3", "CS", "DONE")
     val processes: Set[ProcessId] = 1.to(num_processes)
 
@@ -152,8 +152,8 @@ module bakery {
         }
     }
 
-    def on_critical_session(): bool = filter(0.to(num_processes), key => process_state.get(key) == "CS").size() <= 1
-    def all_done(): bool = process_state.keys().filter(key => process_state.get(key) == "DONE").size() == num_processes
+    def on_critical_session(): bool = processes.filter(key => process_state.get(key) == "CS").size() <= 1
+    def all_done(): bool = processes.filter(key => process_state.get(key) == "DONE").size() == num_processes
 
 
     temporal mutex(): bool = always(on_critical_session)
