@@ -152,12 +152,11 @@ module bakery {
         }
     }
 
-    def on_critical_session(): bool = processes.filter(key => process_state.get(key) == "CS").size() <= 1
+    def mutex(): bool = processes.filter(key => process_state.get(key) == "CS").size() <= 1
     def all_done(): bool = processes.filter(key => process_state.get(key) == "DONE").size() == num_processes
 
 
-    temporal mutex(): bool = always(on_critical_session)
-    temporal termination(): bool = eventually(always(all_done))
+    temporal termination(): bool = eventually(all_done)
 
 }
 
